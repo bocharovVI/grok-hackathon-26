@@ -62,7 +62,8 @@ export function AuthScreen() {
           <span className="sr-only">Password</span>
           <input
             required
-            minLength={6}
+            minLength={8}
+            maxLength={72}
             type="password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}

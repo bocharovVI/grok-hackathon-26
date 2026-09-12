@@ -2,7 +2,7 @@ from collections.abc import Generator
 
 import pytest
 from fastapi.testclient import TestClient
-from sqlalchemy import StaticPool, create_engine
+from sqlalchemy import StaticPool, create_engine, event
 from sqlalchemy.orm import Session, sessionmaker
 
 from app.db.base import Base
@@ -15,6 +15,11 @@ engine = create_engine(
     poolclass=StaticPool,
 )
 TestingSessionLocal = sessionmaker(bind=engine, autocommit=False, autoflush=False)
+
+
+@event.listens_for(engine, "connect")
+def enforce_foreign_keys(connection, _record):
+    connection.execute("PRAGMA foreign_keys=ON")
 
 
 @pytest.fixture(autouse=True)

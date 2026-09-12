@@ -10,3 +10,7 @@ alembic>=1.14.0
 python-dotenv>=1.0.1
 httpx>=0.28.0
 pytest>=8.3.0
+python-multipart>=0.0.20,<1
+jsonschema[format]>=4.23,<5
+Pillow>=11,<13
+pypdfium2>=4.30,<6

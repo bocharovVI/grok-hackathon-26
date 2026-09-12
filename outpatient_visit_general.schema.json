@@ -144,9 +144,6 @@
       "additionalProperties": false,
       "required": [
         "id",
-        "first_name",
-        "last_name",
-        "date_of_birth",
         "created_at"
       ],
       "properties": {
@@ -159,12 +156,6 @@
         "email": {
           "type": "string",
           "format": "email"
-        },
-        "password_hash": {
-          "type": "string",
-          "minLength": 1,
-          "writeOnly": true,
-          "description": "Поле учетной записи. Медицинский парсер не должен извлекать или формировать это значение."
         },
         "phone_number": {
           "type": "string",
@@ -224,9 +215,7 @@
       "additionalProperties": false,
       "required": [
         "id",
-        "name",
-        "address",
-        "city"
+        "name"
       ],
       "properties": {
         "id": {
@@ -249,7 +238,6 @@
       "required": [
         "id",
         "full_name",
-        "specialization",
         "med_org_id"
       ],
       "properties": {
@@ -263,7 +251,7 @@
           "$ref": "#/$defs/nonEmptyString"
         },
         "med_org_id": {
-          "$ref": "#/$defs/uuid"
+          "$ref": "#/$defs/nullableUuid"
         }
       }
     },
@@ -449,7 +437,6 @@
         "doctor_id",
         "med_org_id",
         "document_id",
-        "appointment_at",
         "visit_type",
         "complaints",
         "anamnesis",
@@ -464,10 +451,10 @@
           "$ref": "#/$defs/uuid"
         },
         "doctor_id": {
-          "$ref": "#/$defs/uuid"
+          "$ref": "#/$defs/nullableUuid"
         },
         "med_org_id": {
-          "$ref": "#/$defs/uuid"
+          "$ref": "#/$defs/nullableUuid"
         },
         "document_id": {
           "$ref": "#/$defs/uuid"
@@ -485,6 +472,7 @@
             "dispensary_observation",
             "emergency",
             "consultation",
+            "hospitalization",
             "other"
           ]
         },
@@ -538,9 +526,6 @@
         "patient_id",
         "name",
         "dosage",
-        "unit",
-        "frequency",
-        "intake_conditions",
         "doctor_id",
         "med_org_id",
         "document_id",
@@ -604,10 +589,6 @@
     "hospitalization": {
       "type": "object",
       "additionalProperties": false,
-      "required": [
-        "admitted_at",
-        "discharged_at"
-      ],
       "properties": {
         "admitted_at": {
           "type": "string",
@@ -635,7 +616,6 @@
         "patient_id",
         "type",
         "name",
-        "performed_at",
         "created_at",
         "doctor_id",
         "med_org_id",
@@ -737,7 +717,6 @@
         "icd_10_code",
         "diagnosis_type",
         "status",
-        "diagnosed_at",
         "created_at"
       ],
       "properties": {
@@ -760,7 +739,7 @@
           "$ref": "#/$defs/nonEmptyString"
         },
         "icd_10_code": {
-          "type": "string",
+          "type": ["string", "null"],
           "pattern": "^[A-Z][0-9]{2}(\\.[0-9A-Z]{1,4})?$"
         },
         "diagnosis_type": {
