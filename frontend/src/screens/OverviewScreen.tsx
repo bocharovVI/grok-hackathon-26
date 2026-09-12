@@ -54,7 +54,7 @@ export function OverviewScreen() {
         ))}
       </ul>
       {error ? <p className="mt-4 text-sm text-[#8a1f1f]">{error}</p> : null}
-      {uploading ? <p role="status" className="mt-4 text-sm text-muted">Reading your document… This can take up to two minutes.</p> : null}
+      {uploading ? <p role="status" className="mt-4 text-sm text-muted">Reading your document… Processing can take several minutes. Please keep this page open.</p> : null}
       <div className="mt-16 flex items-center gap-3">
         <button
           type="button"

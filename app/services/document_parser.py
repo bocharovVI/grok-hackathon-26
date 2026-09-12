@@ -1,10 +1,12 @@
 import base64
 import io
 import json
+import logging
 import warnings
 from functools import lru_cache
 from pathlib import Path
 from threading import Lock
+from time import monotonic
 
 import httpx
 import pypdfium2 as pdfium
@@ -15,6 +17,7 @@ from app.core.config import settings
 
 ROOT = Path(__file__).resolve().parents[2]
 PDF_LOCK = Lock()  # PDFium calls must not overlap between request threads.
+logger = logging.getLogger("uvicorn.error.document_parser")
 
 
 class InvalidDocument(ValueError):
@@ -81,13 +84,19 @@ def parse_document(images: list[dict], context: dict) -> dict:
     if not settings.xai_api_key:
         raise ParserError("XAI_API_KEY is not configured")
     prompt = (ROOT / "prompt_medical_document_parser_v3.md").read_text(encoding="utf-8")
+    started = monotonic()
+    logger.info("Grok request started model=%s pages=%d read_timeout_seconds=%s reasoning_effort=%s",
+                settings.xai_model, len(images), settings.xai_timeout_seconds,
+                settings.xai_reasoning_effort or "provider_default")
     try:
-        with httpx.Client(timeout=settings.xai_timeout_seconds) as client:
+        timeout = httpx.Timeout(connect=10, read=settings.xai_timeout_seconds, write=60, pool=10)
+        with httpx.Client(timeout=timeout) as client:
             response = client.post(
                 "https://api.x.ai/v1/chat/completions",
                 headers={"Authorization": f"Bearer {settings.xai_api_key}"},
                 json={
                     "model": settings.xai_model,
+                    **({"reasoning_effort": settings.xai_reasoning_effort} if settings.xai_reasoning_effort else {}),
                     "messages": [
                         {"role": "system", "content": prompt},
                         {"role": "user", "content": [
@@ -105,11 +114,26 @@ def parse_document(images: list[dict], context: dict) -> dict:
         choice = response.json()["choices"][0]
         if choice.get("finish_reason") != "stop" or choice["message"].get("refusal"):
             raise ParserError("Grok did not return a complete extraction")
-        return json.loads(choice["message"]["content"])
+        data = json.loads(choice["message"]["content"])
+        logger.info("Grok response received model=%s elapsed_seconds=%.1f", settings.xai_model, monotonic() - started)
+        return data
     except httpx.TimeoutException as exc:
-        raise ParserError("Grok timed out; please try again") from exc
+        logger.warning("Grok timeout model=%s stage=%s elapsed_seconds=%.1f",
+                       settings.xai_model, type(exc).__name__, monotonic() - started)
+        if isinstance(exc, httpx.ReadTimeout):
+            raise ParserError(
+                f"Grok did not respond within the {settings.xai_timeout_seconds:g}-second read timeout. "
+                "Try a document with fewer pages or retry later."
+            ) from exc
+        raise ParserError("Connection to Grok timed out; please try again later") from exc
     except httpx.HTTPError as exc:
+        logger.warning("Grok request failed model=%s error_type=%s status=%s elapsed_seconds=%.1f",
+                       settings.xai_model, type(exc).__name__,
+                       exc.response.status_code if isinstance(exc, httpx.HTTPStatusError) else None,
+                       monotonic() - started)
         raise ParserError("Grok request failed; check API key, model and quota on the server") from exc
+    except ParserError:
+        raise
     except (ValueError, KeyError, IndexError, TypeError) as exc:
         raise ParserError("Grok returned an invalid response") from exc
 

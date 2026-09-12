@@ -268,3 +268,48 @@ def test_cors_and_render_database_url(client):
     assert response.status_code == 200
     assert response.headers["access-control-allow-origin"] == "http://localhost:5173"
     assert Settings(database_url="postgres://u:p@db/name").database_url == "postgresql+psycopg2://u:p@db/name"
+
+
+@pytest.mark.parametrize("effort", ["low", ""])
+def test_grok_request_limits_and_reasoning(context, monkeypatch, effort):
+    monkeypatch.setattr(settings, "xai_api_key", "test-secret-key")
+    monkeypatch.setattr(settings, "xai_timeout_seconds", 300)
+    monkeypatch.setattr(settings, "xai_reasoning_effort", effort)
+    original = httpx.Client
+
+    def handler(request):
+        assert request.extensions["timeout"] == {"connect": 10, "read": 300, "write": 60, "pool": 10}
+        payload = json.loads(request.content)
+        if effort:
+            assert payload["reasoning_effort"] == effort
+        else:
+            assert "reasoning_effort" not in payload
+        return httpx.Response(200, json={"choices": [{"finish_reason": "stop", "message": {
+            "content": json.dumps(extraction(context)),
+        }}]})
+
+    monkeypatch.setattr(document_parser.httpx, "Client", lambda **kw: original(transport=httpx.MockTransport(handler), **kw))
+    assert document_parser.parse_document([], context)["patient"]["id"] == context["patient_id"]
+
+
+@pytest.mark.parametrize("timeout_type", [httpx.ReadTimeout, httpx.ConnectTimeout])
+def test_timeout_diagnostics_exclude_document_content(context, monkeypatch, caplog, timeout_type):
+    monkeypatch.setattr(settings, "xai_api_key", "test-secret-key")
+    monkeypatch.setattr(settings, "xai_timeout_seconds", 300)
+    original = httpx.Client
+
+    def handler(request):
+        raise timeout_type("sensitive upstream text", request=request)
+
+    monkeypatch.setattr(document_parser.httpx, "Client", lambda **kw: original(transport=httpx.MockTransport(handler), **kw))
+    with pytest.raises(ParserError) as error:
+        document_parser.parse_document([], context)
+    assert timeout_type.__name__ in caplog.text
+    assert "elapsed_seconds=" in caplog.text
+    assert "test-secret-key" not in caplog.text
+    assert "sensitive upstream text" not in caplog.text
+    assert context["patient_id"] not in caplog.text
+    if timeout_type is httpx.ReadTimeout:
+        assert "300-second read timeout" in str(error.value)
+    else:
+        assert "Connection to Grok timed out" in str(error.value)
