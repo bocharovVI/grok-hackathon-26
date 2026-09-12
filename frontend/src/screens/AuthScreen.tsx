@@ -41,8 +41,8 @@ export function AuthScreen() {
         }}
       >
         <div>
-          <h1 className="text-3xl font-medium">Регистрация</h1>
-          <p className="mt-3 text-muted">Создайте аккаунт для хранения медицинских документов.</p>
+          <h1 className="text-3xl font-medium">Sign up</h1>
+          <p className="mt-3 text-muted">Create an account to store your medical documents.</p>
         </div>
         <label className="block">
           <span className="text-sm">Email</span>
@@ -57,7 +57,7 @@ export function AuthScreen() {
           />
         </label>
         <label className="block">
-          <span className="text-sm">Пароль</span>
+          <span className="text-sm">Password</span>
           <input
             required
             minLength={8}
@@ -65,7 +65,7 @@ export function AuthScreen() {
             type="password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            placeholder="Не менее 8 символов"
+            placeholder="At least 8 characters"
             className="w-full border-b border-ink bg-transparent py-2 outline-none"
           />
         </label>
@@ -75,20 +75,20 @@ export function AuthScreen() {
           disabled={busy}
           className="w-full cursor-pointer rounded-xl bg-brand px-4 py-3 font-medium text-paper hover:bg-ink disabled:cursor-wait disabled:opacity-50"
         >
-          Зарегистрироваться
+          Create account
         </button>
         <div className="flex flex-col gap-3">
-          <p className="text-center text-sm text-muted">Уже есть аккаунт?</p>
+          <p className="text-center text-sm text-muted">Already have an account?</p>
           <button
             type="button"
             disabled={busy}
             onClick={() => void submit("signin")}
             className="w-full cursor-pointer rounded-md border border-ink px-4 py-3 font-medium disabled:cursor-wait disabled:opacity-50"
           >
-            Войти
+            Sign in
           </button>
         </div>
-        {busy ? <p role="status" className="text-center text-sm text-muted">Подождите…</p> : null}
+        {busy ? <p role="status" className="text-center text-sm text-muted">Please wait…</p> : null}
       </form>
     </AppShell>
   );

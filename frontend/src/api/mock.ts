@@ -64,7 +64,7 @@ const seed = (): Store => ({
   ],
   diagnosis: null,
   overview: [
-    "Profile is incomplete until the anketa is saved.",
+    "Your profile is incomplete until it is saved.",
     "Upload lab scans or PDFs, then generate a diagnosis.",
     "Extracted fields appear on each document.",
   ],
@@ -194,11 +194,11 @@ export const mockApi = {
       id: crypto.randomUUID(),
       title: "Working diagnosis",
       summary:
-        "Generated from the anketa and uploaded documents. This is a demo summary until the live model is wired.",
+        "Generated from your profile and uploaded documents. This is a demo summary until the live model is wired.",
       findings: [
         user?.profile?.comments
           ? `Patient note: ${user.profile.comments}`
-          : "No free-text comments on the anketa.",
+          : "No comments in your profile.",
         `${store.docs.length} document(s) on file for review.`,
         "Correlate labs with symptoms before any treatment change.",
       ],
