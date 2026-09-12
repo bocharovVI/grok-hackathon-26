@@ -2,12 +2,12 @@
 
 @theme {
   --font-sans: "IBM Plex Sans", ui-sans-serif, system-ui, sans-serif;
-  --font-serif: "Instrument Serif", ui-serif, Georgia, serif;
-  --color-ink: #111111;
+  --color-ink: #18344f;
+  --color-brand: #07558f;
   --color-paper: #ffffff;
-  --color-mist: #f3f3f1;
-  --color-line: #d8d8d4;
-  --color-muted: #5a5a5a;
+  --color-mist: #f0f5fa;
+  --color-line: #d6e2ed;
+  --color-muted: #566d83;
   --color-stamp: #0b6e4f;
 }
 
@@ -30,4 +30,20 @@ input,
 textarea,
 select {
   font: inherit;
+}
+
+h1,
+h2 {
+  color: var(--color-brand);
+  letter-spacing: -0.025em;
+}
+
+:where(a, button, input, textarea, select):focus-visible {
+  outline: 2px solid var(--color-brand);
+  outline-offset: 4px;
+}
+
+::selection {
+  background: #d5e8f8;
+  color: var(--color-ink);
 }

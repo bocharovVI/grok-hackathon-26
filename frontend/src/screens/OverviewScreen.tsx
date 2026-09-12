@@ -44,7 +44,7 @@ export function OverviewScreen() {
 
   return (
     <AppShell showPlay onPlay={() => void onCreate()}>
-      <h1 className="mt-6 font-serif text-4xl italic">Overview</h1>
+      <h1 className="mt-6 text-4xl font-medium">Overview</h1>
       <ul className="mt-8 space-y-4">
         {(bullets.length ? bullets : ["…", "…", "…"]).map((line, index) => (
           <li key={`${line}-${index}`} className="flex items-start gap-3 text-[17px]">

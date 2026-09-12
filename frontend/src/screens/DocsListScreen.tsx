@@ -22,7 +22,7 @@ export function DocsListScreen() {
       {!docs && !error ? <p className="mt-10 text-muted">Loading documents…</p> : null}
       {docs?.length === 0 ? (
         <div className="mt-16">
-          <h2 className="font-serif text-3xl">No documents yet</h2>
+          <h2 className="text-3xl font-medium">No documents yet</h2>
           <p className="mt-3 text-muted">Upload a scan from Overview to start a file.</p>
           <Link to="/" className="mt-6 inline-block border-b border-ink pb-0.5">
             Back to overview
