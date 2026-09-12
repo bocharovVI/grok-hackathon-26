@@ -1,0 +1,865 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.org/schemas/medical-history-db-import-v3.schema.json",
+  "title": "Медицинская история: контракт импорта в базу данных",
+  "description": "Универсальный контракт медицинских данных с явными сущностями пациента, медицинской организации, врача, документа, приема, препарата, операции, диагноза и рекомендации.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "document_type",
+    "patient",
+    "medical_organizations",
+    "doctors",
+    "documents",
+    "medical_visits",
+    "medications",
+    "operations",
+    "diagnoses",
+    "recommendations"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": "3.0"
+    },
+    "document_type": {
+      "const": "medical_history_db_import"
+    },
+    "patient": {
+      "$ref": "#/$defs/patient"
+    },
+    "medical_organizations": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/medicalOrganization"
+      }
+    },
+    "doctors": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/doctor"
+      }
+    },
+    "documents": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/document"
+      }
+    },
+    "medical_visits": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/medicalVisit"
+      }
+    },
+    "medications": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/medication"
+      }
+    },
+    "operations": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/operation"
+      },
+      "description": "Только хирургические и иные медицинские вмешательства. Обычные роды без операции сюда не включаются."
+    },
+    "diagnoses": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/diagnosis"
+      }
+    },
+    "recommendations": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/recommendation"
+      }
+    }
+  },
+  "$defs": {
+    "uuid": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "nullableUuid": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "format": "uuid"
+    },
+    "clinicalDateTime": {
+      "description": "Дата клинического события с доступной точностью: год, месяц, день или дата и время.",
+      "anyOf": [
+        {
+          "type": "string",
+          "pattern": "^[0-9]{4}$"
+        },
+        {
+          "type": "string",
+          "pattern": "^[0-9]{4}-(0[1-9]|1[0-2])$"
+        },
+        {
+          "type": "string",
+          "format": "date"
+        },
+        {
+          "type": "string",
+          "format": "date-time"
+        }
+      ]
+    },
+    "nonEmptyString": {
+      "type": "string",
+      "minLength": 1
+    },
+    "coding": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "system",
+        "code"
+      ],
+      "properties": {
+        "system": {
+          "$ref": "#/$defs/nonEmptyString"
+        },
+        "version": {
+          "type": "string",
+          "minLength": 1
+        },
+        "code": {
+          "$ref": "#/$defs/nonEmptyString"
+        },
+        "display": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "patient": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "first_name",
+        "last_name",
+        "date_of_birth",
+        "created_at"
+      ],
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/uuid"
+        },
+        "user_id": {
+          "$ref": "#/$defs/uuid"
+        },
+        "email": {
+          "type": "string",
+          "format": "email"
+        },
+        "password_hash": {
+          "type": "string",
+          "minLength": 1,
+          "writeOnly": true,
+          "description": "Поле учетной записи. Медицинский парсер не должен извлекать или формировать это значение."
+        },
+        "phone_number": {
+          "type": "string",
+          "minLength": 1
+        },
+        "first_name": {
+          "$ref": "#/$defs/nonEmptyString"
+        },
+        "last_name": {
+          "$ref": "#/$defs/nonEmptyString"
+        },
+        "middle_name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "date_of_birth": {
+          "type": "string",
+          "format": "date"
+        },
+        "sex": {
+          "type": "string",
+          "enum": [
+            "female",
+            "male",
+            "other",
+            "unknown"
+          ]
+        },
+        "height": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 300,
+          "description": "Рост в сантиметрах."
+        },
+        "blood_type": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 4,
+          "description": "Группа крови: 1=O(I), 2=A(II), 3=B(III), 4=AB(IV)."
+        },
+        "rh_factor": {
+          "type": "string",
+          "enum": [
+            "positive",
+            "negative",
+            "unknown"
+          ]
+        },
+        "created_at": {
+          "type": "string",
+          "format": "date"
+        }
+      }
+    },
+    "medicalOrganization": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "name",
+        "address",
+        "city"
+      ],
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/uuid"
+        },
+        "name": {
+          "$ref": "#/$defs/nonEmptyString"
+        },
+        "address": {
+          "$ref": "#/$defs/nonEmptyString"
+        },
+        "city": {
+          "$ref": "#/$defs/nonEmptyString"
+        }
+      }
+    },
+    "doctor": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "full_name",
+        "specialization",
+        "med_org_id"
+      ],
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/uuid"
+        },
+        "full_name": {
+          "$ref": "#/$defs/nonEmptyString"
+        },
+        "specialization": {
+          "$ref": "#/$defs/nonEmptyString"
+        },
+        "med_org_id": {
+          "$ref": "#/$defs/uuid"
+        }
+      }
+    },
+    "document": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "created_at",
+        "type",
+        "s3_url"
+      ],
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/uuid"
+        },
+        "created_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "type": {
+          "type": "string",
+          "enum": [
+            "outpatient_visit",
+            "discharge_summary",
+            "operation_report",
+            "laboratory_report",
+            "imaging_report",
+            "prescription",
+            "other"
+          ]
+        },
+        "s3_url": {
+          "type": "string",
+          "format": "uri"
+        }
+      }
+    },
+    "complaint": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "text"
+      ],
+      "properties": {
+        "text": {
+          "$ref": "#/$defs/nonEmptyString"
+        },
+        "duration": {
+          "type": "string",
+          "minLength": 1
+        },
+        "severity": {
+          "type": "string",
+          "enum": [
+            "mild",
+            "moderate",
+            "severe",
+            "unknown"
+          ]
+        }
+      }
+    },
+    "anamnesis": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "present_illness",
+        "past_medical_history",
+        "epidemiological_history",
+        "family_history",
+        "social_history",
+        "reproductive_history"
+      ],
+      "properties": {
+        "present_illness": {
+          "type": "string"
+        },
+        "past_medical_history": {
+          "type": "string"
+        },
+        "epidemiological_history": {
+          "type": "string"
+        },
+        "family_history": {
+          "type": "string"
+        },
+        "social_history": {
+          "type": "string"
+        },
+        "reproductive_history": {
+          "type": "string",
+          "description": "Беременности и роды без хирургического вмешательства. Кесарево сечение и другие операции дополнительно фиксируются в operations."
+        },
+        "allergy_history": {
+          "type": "string"
+        }
+      }
+    },
+    "measurement": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "value"
+      ],
+      "properties": {
+        "name": {
+          "$ref": "#/$defs/nonEmptyString"
+        },
+        "value": {
+          "oneOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "string",
+              "minLength": 1
+            },
+            {
+              "type": "boolean"
+            }
+          ]
+        },
+        "unit": {
+          "type": "string",
+          "minLength": 1
+        },
+        "note": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "examinationFinding": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "system",
+        "text"
+      ],
+      "properties": {
+        "system": {
+          "$ref": "#/$defs/nonEmptyString"
+        },
+        "text": {
+          "$ref": "#/$defs/nonEmptyString"
+        }
+      }
+    },
+    "examination": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "general_status",
+        "vital_signs",
+        "findings"
+      ],
+      "properties": {
+        "general_status": {
+          "type": "string"
+        },
+        "vital_signs": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/measurement"
+          }
+        },
+        "findings": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/examinationFinding"
+          }
+        }
+      }
+    },
+    "medicalVisit": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "patient_id",
+        "doctor_id",
+        "med_org_id",
+        "document_id",
+        "appointment_at",
+        "visit_type",
+        "complaints",
+        "anamnesis",
+        "examination",
+        "created_at"
+      ],
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/uuid"
+        },
+        "patient_id": {
+          "$ref": "#/$defs/uuid"
+        },
+        "doctor_id": {
+          "$ref": "#/$defs/uuid"
+        },
+        "med_org_id": {
+          "$ref": "#/$defs/uuid"
+        },
+        "document_id": {
+          "$ref": "#/$defs/uuid"
+        },
+        "appointment_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "visit_type": {
+          "type": "string",
+          "enum": [
+            "primary",
+            "follow_up",
+            "preventive",
+            "dispensary_observation",
+            "emergency",
+            "consultation",
+            "other"
+          ]
+        },
+        "reason": {
+          "type": "string",
+          "minLength": 1
+        },
+        "complaints": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/complaint"
+          }
+        },
+        "denied_symptoms": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/nonEmptyString"
+          }
+        },
+        "anamnesis": {
+          "$ref": "#/$defs/anamnesis"
+        },
+        "examination": {
+          "$ref": "#/$defs/examination"
+        },
+        "diagnosis_ids": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/uuid"
+          },
+          "uniqueItems": true
+        },
+        "recommendation_ids": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/uuid"
+          },
+          "uniqueItems": true
+        },
+        "created_at": {
+          "type": "string",
+          "format": "date-time"
+        }
+      }
+    },
+    "medication": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "patient_id",
+        "name",
+        "dosage",
+        "unit",
+        "frequency",
+        "intake_conditions",
+        "doctor_id",
+        "med_org_id",
+        "document_id",
+        "created_at"
+      ],
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/uuid"
+        },
+        "patient_id": {
+          "$ref": "#/$defs/uuid"
+        },
+        "name": {
+          "$ref": "#/$defs/nonEmptyString"
+        },
+        "dosage": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "unit": {
+          "$ref": "#/$defs/nonEmptyString"
+        },
+        "frequency": {
+          "$ref": "#/$defs/nonEmptyString"
+        },
+        "intake_conditions": {
+          "type": "string"
+        },
+        "doctor_id": {
+          "$ref": "#/$defs/nullableUuid"
+        },
+        "med_org_id": {
+          "$ref": "#/$defs/nullableUuid"
+        },
+        "document_id": {
+          "$ref": "#/$defs/nullableUuid"
+        },
+        "status": {
+          "type": "string",
+          "enum": [
+            "active",
+            "completed",
+            "stopped",
+            "unknown"
+          ]
+        },
+        "start_date": {
+          "type": "string",
+          "format": "date"
+        },
+        "end_date": {
+          "type": "string",
+          "format": "date"
+        },
+        "created_at": {
+          "type": "string",
+          "format": "date"
+        }
+      }
+    },
+    "hospitalization": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "admitted_at",
+        "discharged_at"
+      ],
+      "properties": {
+        "admitted_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "discharged_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "department": {
+          "type": "string",
+          "minLength": 1
+        },
+        "discharge_summary": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "operation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "patient_id",
+        "type",
+        "name",
+        "performed_at",
+        "created_at",
+        "doctor_id",
+        "med_org_id",
+        "document_id"
+      ],
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/uuid"
+        },
+        "patient_id": {
+          "$ref": "#/$defs/uuid"
+        },
+        "type": {
+          "type": "string",
+          "enum": [
+            "surgery",
+            "diagnostic_procedure",
+            "therapeutic_procedure",
+            "obstetric_operation",
+            "other"
+          ]
+        },
+        "name": {
+          "$ref": "#/$defs/nonEmptyString"
+        },
+        "procedure_code": {
+          "$ref": "#/$defs/coding"
+        },
+        "performed_at": {
+          "$ref": "#/$defs/clinicalDateTime",
+          "description": "Фактическая дата вмешательства с известной точностью. Не совпадает по смыслу с created_at."
+        },
+        "urgency": {
+          "type": "string",
+          "enum": [
+            "elective",
+            "urgent",
+            "emergency",
+            "unknown"
+          ]
+        },
+        "indication": {
+          "type": "string",
+          "minLength": 1
+        },
+        "anesthesia_type": {
+          "type": "string",
+          "minLength": 1
+        },
+        "outcome": {
+          "type": "string",
+          "minLength": 1
+        },
+        "source": {
+          "type": "string",
+          "enum": [
+            "patient",
+            "medical_record",
+            "operation_report",
+            "discharge_summary",
+            "other"
+          ]
+        },
+        "complications": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/nonEmptyString"
+          }
+        },
+        "hospitalization": {
+          "$ref": "#/$defs/hospitalization"
+        },
+        "created_at": {
+          "type": "string",
+          "format": "date",
+          "description": "Дата создания строки в базе данных."
+        },
+        "doctor_id": {
+          "$ref": "#/$defs/nullableUuid"
+        },
+        "med_org_id": {
+          "$ref": "#/$defs/nullableUuid"
+        },
+        "document_id": {
+          "$ref": "#/$defs/nullableUuid"
+        }
+      }
+    },
+    "diagnosis": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "patient_id",
+        "doctor_id",
+        "med_org_id",
+        "document_id",
+        "name",
+        "icd_10_code",
+        "diagnosis_type",
+        "status",
+        "diagnosed_at",
+        "created_at"
+      ],
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/uuid"
+        },
+        "patient_id": {
+          "$ref": "#/$defs/uuid"
+        },
+        "doctor_id": {
+          "$ref": "#/$defs/nullableUuid"
+        },
+        "med_org_id": {
+          "$ref": "#/$defs/nullableUuid"
+        },
+        "document_id": {
+          "$ref": "#/$defs/nullableUuid"
+        },
+        "name": {
+          "$ref": "#/$defs/nonEmptyString"
+        },
+        "icd_10_code": {
+          "type": "string",
+          "pattern": "^[A-Z][0-9]{2}(\\.[0-9A-Z]{1,4})?$"
+        },
+        "diagnosis_type": {
+          "type": "string",
+          "enum": [
+            "primary",
+            "complication",
+            "comorbidity",
+            "differential",
+            "external_cause",
+            "other"
+          ]
+        },
+        "status": {
+          "type": "string",
+          "enum": [
+            "preliminary",
+            "confirmed",
+            "refuted",
+            "resolved",
+            "unknown"
+          ]
+        },
+        "diagnosed_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "rationale": {
+          "type": "string",
+          "minLength": 1
+        },
+        "created_at": {
+          "type": "string",
+          "format": "date"
+        }
+      }
+    },
+    "recommendation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "patient_id",
+        "doctor_id",
+        "med_org_id",
+        "document_id",
+        "category",
+        "text",
+        "created_at"
+      ],
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/uuid"
+        },
+        "patient_id": {
+          "$ref": "#/$defs/uuid"
+        },
+        "doctor_id": {
+          "$ref": "#/$defs/nullableUuid"
+        },
+        "med_org_id": {
+          "$ref": "#/$defs/nullableUuid"
+        },
+        "document_id": {
+          "$ref": "#/$defs/nullableUuid"
+        },
+        "category": {
+          "type": "string",
+          "enum": [
+            "medication",
+            "nutrition",
+            "physical_activity",
+            "lifestyle",
+            "monitoring",
+            "safety",
+            "follow_up",
+            "other"
+          ]
+        },
+        "text": {
+          "$ref": "#/$defs/nonEmptyString"
+        },
+        "priority": {
+          "type": "string",
+          "enum": [
+            "routine",
+            "important",
+            "urgent"
+          ]
+        },
+        "warning": {
+          "type": "string",
+          "minLength": 1
+        },
+        "created_at": {
+          "type": "string",
+          "format": "date"
+        }
+      }
+    }
+  }
+}
