@@ -1,0 +1,41 @@
+# yaml-language-server: $schema=https://render.com/schema/render.yaml.json
+# Static SPA on Render CDN. The site cannot use private-network hostnames;
+# VITE_API_URL must be a public HTTPS origin (set in the dashboard, then redeploy).
+services:
+  - type: web
+    name: anketa-frontend
+    runtime: static
+    rootDir: frontend
+    buildCommand: npm ci && npm run build
+    staticPublishPath: frontend/dist
+    autoDeployTrigger: commit
+    previews:
+      generation: automatic
+    buildFilter:
+      paths:
+        - frontend/**
+        - render.yaml
+    envVars:
+      - key: NODE_VERSION
+        value: "22"
+      - key: SKIP_INSTALL_DEPS
+        value: "true"
+      - key: VITE_API_URL
+        sync: false
+    routes:
+      - type: rewrite
+        source: /*
+        destination: /index.html
+    headers:
+      - path: /assets/*
+        name: Cache-Control
+        value: public, max-age=31536000, immutable
+      - path: /*
+        name: X-Content-Type-Options
+        value: nosniff
+      - path: /*
+        name: Referrer-Policy
+        value: strict-origin-when-cross-origin
+      - path: /*
+        name: X-Frame-Options
+        value: DENY
