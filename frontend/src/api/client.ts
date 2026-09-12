@@ -3,6 +3,15 @@ import { readAccessToken, writeAccessToken } from "./authToken";
 import { mockApi } from "./mock";
 
 const apiBase = (import.meta.env.VITE_API_URL ?? "").replace(/\/$/, "");
+const useMock = import.meta.env.VITE_USE_MOCK === "true";
+
+async function responseError(res: Response): Promise<Error> {
+  const body = await res.json().catch(() => null);
+  const detail = body?.detail;
+  return new Error(typeof detail === "string" ? detail : Array.isArray(detail)
+    ? detail.map((item: { msg: string }) => item.msg).join("; ")
+    : `Request failed (${res.status})`);
+}
 
 function asUser(session: AuthSession): SessionUser {
   return {
@@ -27,24 +36,24 @@ function headers(init?: RequestInit, json = false): HeadersInit {
 }
 
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
+  if (!apiBase) throw new Error("API URL is not configured. Set VITE_API_URL and rebuild.");
   const res = await fetch(`${apiBase}${path}`, {
     ...init,
     headers: headers(init, Boolean(init?.body)),
-    credentials: readAccessToken() ? "omit" : "include",
+    credentials: "omit",
   });
   if (!res.ok) {
-    const text = await res.text();
-    throw new Error(text || `Request failed (${res.status})`);
+    throw await responseError(res);
   }
   if (res.status === 204) return undefined as T;
   return (await res.json()) as T;
 }
 
 export const api = {
-  usesMock: !apiBase,
+  usesMock: useMock,
 
   async signup(email: string, password: string) {
-    if (!apiBase) return mockApi.signup(email, password);
+    if (useMock) return mockApi.signup(email, password);
     return remember(
       await request<AuthSession>("/auth/signup", {
         method: "POST",
@@ -54,7 +63,7 @@ export const api = {
   },
 
   async login(email: string, password: string) {
-    if (!apiBase) return mockApi.login(email, password);
+    if (useMock) return mockApi.login(email, password);
     return remember(
       await request<AuthSession>("/auth/login", {
         method: "POST",
@@ -64,23 +73,28 @@ export const api = {
   },
 
   async logout() {
+    if (useMock) return mockApi.logout();
+    if (apiBase && readAccessToken()) {
+      const res = await fetch(`${apiBase}/auth/logout`, {
+        method: "POST", headers: headers(), credentials: "omit",
+      });
+      if (!res.ok && res.status !== 401) throw await responseError(res);
+    }
     writeAccessToken(null);
-    if (!apiBase) return mockApi.logout();
-    return request<void>("/auth/logout", { method: "POST" });
   },
 
   me() {
-    if (!apiBase) return mockApi.me();
+    if (useMock) return mockApi.me();
     return request<SessionUser | null>("/me");
   },
 
   getProfile() {
-    if (!apiBase) return mockApi.getProfile();
+    if (useMock) return mockApi.getProfile();
     return request<Profile>("/me/profile");
   },
 
   saveProfile(profile: Profile) {
-    if (!apiBase) return mockApi.saveProfile(profile);
+    if (useMock) return mockApi.saveProfile(profile);
     return request<SessionUser>("/me/profile", {
       method: "PUT",
       body: JSON.stringify(profile),
@@ -88,41 +102,51 @@ export const api = {
   },
 
   overview() {
-    if (!apiBase) return mockApi.overview();
+    if (useMock) return mockApi.overview();
     return request<string[]>("/overview");
   },
 
   listDocs() {
-    if (!apiBase) return mockApi.listDocs();
+    if (useMock) return mockApi.listDocs();
     return request<DocRecord[]>("/docs");
   },
 
   getDoc(id: string) {
-    if (!apiBase) return mockApi.getDoc(id);
+    if (useMock) return mockApi.getDoc(id);
     return request<DocRecord>(`/docs/${id}`);
   },
 
   async uploadDoc(file: File) {
-    if (!apiBase) return mockApi.uploadDoc(file);
+    if (useMock) return mockApi.uploadDoc(file);
+    if (!apiBase) throw new Error("API URL is not configured.");
     const body = new FormData();
     body.append("file", file);
     const res = await fetch(`${apiBase}/docs`, {
       method: "POST",
       headers: headers({}),
       body,
-      credentials: readAccessToken() ? "omit" : "include",
+      credentials: "omit",
     });
-    if (!res.ok) throw new Error("Upload failed.");
+    if (!res.ok) throw await responseError(res);
     return (await res.json()) as DocRecord;
   },
 
   createDiagnosis() {
-    if (!apiBase) return mockApi.createDiagnosis();
-    return request<DiagnosisRecord>("/diagnosis", { method: "POST" });
+    if (useMock) return mockApi.createDiagnosis();
+    return request<DiagnosisRecord | null>("/diagnosis", { method: "POST" });
   },
 
   getDiagnosis() {
-    if (!apiBase) return mockApi.getDiagnosis();
+    if (useMock) return mockApi.getDiagnosis();
     return request<DiagnosisRecord | null>("/diagnosis");
+  },
+
+  async previewDoc(doc: DocRecord): Promise<string> {
+    if (useMock) return doc.previewUrl;
+    const res = await fetch(`${apiBase}/docs/${encodeURIComponent(doc.id)}/file`, {
+      headers: headers(), credentials: "omit",
+    });
+    if (!res.ok) throw await responseError(res);
+    return URL.createObjectURL(await res.blob());
   },
 };

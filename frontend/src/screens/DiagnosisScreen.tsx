@@ -17,10 +17,10 @@ export function DiagnosisScreen() {
 
   return (
     <AppShell>
-      <h1 className="mt-20 text-center font-serif text-4xl">диагноз</h1>
+      <h1 className="mt-20 text-center font-serif text-4xl">Диагнозы из документов</h1>
       {error ? <p className="mt-6 text-center text-sm text-[#8a1f1f]">{error}</p> : null}
       {!record && !error ? (
-        <p className="mt-10 text-center text-muted">Generate a diagnosis from Overview.</p>
+        <p className="mt-10 text-center text-muted">No diagnoses found in your uploaded documents yet.</p>
       ) : null}
       {record ? (
         <div className="mt-10 space-y-4 text-[17px] leading-7">

@@ -8,6 +8,7 @@ export function OverviewScreen() {
   const inputRef = useRef<HTMLInputElement>(null);
   const [bullets, setBullets] = useState<string[]>([]);
   const [error, setError] = useState("");
+  const [uploading, setUploading] = useState(false);
 
   useEffect(() => {
     void api
@@ -17,13 +18,17 @@ export function OverviewScreen() {
   }, []);
 
   async function onUpload(file: File | undefined) {
-    if (!file) return;
+    if (!file || uploading) return;
     setError("");
+    setUploading(true);
     try {
       const doc = await api.uploadDoc(file);
       navigate(`/docs/${doc.id}`);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Upload failed.");
+    } finally {
+      setUploading(false);
+      if (inputRef.current) inputRef.current.value = "";
     }
   }
 
@@ -49,10 +54,12 @@ export function OverviewScreen() {
         ))}
       </ul>
       {error ? <p className="mt-4 text-sm text-[#8a1f1f]">{error}</p> : null}
+      {uploading ? <p role="status" className="mt-4 text-sm text-muted">Reading your document… This can take up to two minutes.</p> : null}
       <div className="mt-16 flex items-center gap-3">
         <button
           type="button"
           aria-label="Upload document"
+          disabled={uploading}
           onClick={() => inputRef.current?.click()}
           className="grid h-10 w-10 place-items-center rounded-md border border-ink"
         >
@@ -63,12 +70,12 @@ export function OverviewScreen() {
           </svg>
         </button>
         <button type="button" onClick={() => void onCreate()} className="text-lg">
-          or create
+          view recorded diagnoses
         </button>
         <input
           ref={inputRef}
           type="file"
-          accept="image/*,.pdf,application/pdf"
+          accept="image/png,image/jpeg,image/webp,.pdf,application/pdf"
           className="hidden"
           onChange={(e) => void onUpload(e.target.files?.[0])}
         />
