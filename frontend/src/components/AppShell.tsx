@@ -1,0 +1,71 @@
+import { useState, type ReactNode } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import { api } from "../api/client";
+import { useSession } from "../session/SessionContext";
+
+type AppShellProps = {
+  children: ReactNode;
+  showPlay?: boolean;
+  onPlay?: () => void;
+};
+
+export function AppShell({ children, showPlay, onPlay }: AppShellProps) {
+  const [open, setOpen] = useState(false);
+  const { setUser } = useSession();
+  const navigate = useNavigate();
+
+  async function logout() {
+    await api.logout();
+    setUser(null);
+    navigate("/auth");
+  }
+
+  return (
+    <div className="relative mx-auto min-h-dvh w-full max-w-[430px] bg-paper shadow-[0_0_0_1px_#d8d8d4]">
+      <header className="flex items-center justify-between px-5 pt-6 pb-2">
+        <Link to="/" aria-label="Overview" className="block h-7 w-10 rounded-md bg-ink" />
+        <div className="flex items-center gap-3">
+          {showPlay ? (
+            <button
+              type="button"
+              onClick={onPlay}
+              aria-label="Generate diagnosis"
+              className="grid h-9 w-9 place-items-center text-ink"
+            >
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <polygon points="6 3 20 12 6 21 6 3" />
+              </svg>
+            </button>
+          ) : null}
+          <button
+            type="button"
+            aria-label="Open menu"
+            aria-expanded={open}
+            onClick={() => setOpen((v) => !v)}
+            className="grid h-9 w-9 place-items-center text-ink"
+          >
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <line x1="4" x2="20" y1="6" y2="6" />
+              <line x1="4" x2="20" y1="12" y2="12" />
+              <line x1="4" x2="20" y1="18" y2="18" />
+            </svg>
+          </button>
+        </div>
+      </header>
+      {open ? (
+        <nav className="absolute right-4 z-20 w-40 rounded-md border border-line bg-paper p-3 text-sm">
+          <Link className="block py-1.5" to="/docs" onClick={() => setOpen(false)}>
+            my docs
+          </Link>
+          <Link className="block py-1.5" to="/anketa" onClick={() => setOpen(false)}>
+            profile
+          </Link>
+          <button type="button" className="block w-full py-1.5 text-left" onClick={() => void logout()}>
+            logout
+          </button>
+        </nav>
+      ) : null}
+      <main className="px-6 pb-10">{children}</main>
+    </div>
+  );
+}
