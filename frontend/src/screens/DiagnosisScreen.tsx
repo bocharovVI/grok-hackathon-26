@@ -17,7 +17,7 @@ export function DiagnosisScreen() {
 
   return (
     <AppShell>
-      <h1 className="mt-20 text-center font-serif text-4xl">Диагнозы из документов</h1>
+      <h1 className="mt-20 text-center text-4xl font-medium">Диагнозы из документов</h1>
       {error ? <p className="mt-6 text-center text-sm text-[#8a1f1f]">{error}</p> : null}
       {!record && !error ? (
         <p className="mt-10 text-center text-muted">No diagnoses found in your uploaded documents yet.</p>

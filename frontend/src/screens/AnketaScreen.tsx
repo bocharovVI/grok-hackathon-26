@@ -54,7 +54,7 @@ export function AnketaScreen() {
   return (
     <AppShell>
       <form className="mt-6 flex flex-col gap-5" onSubmit={(e) => void onSubmit(e)}>
-        <h1 className="font-serif text-4xl">Анкета</h1>
+        <h1 className="text-4xl font-medium">Анкета</h1>
         {field("heightCm", "рост")}
         {field("weightKg", "вес")}
         <div className="flex gap-3">
@@ -89,7 +89,7 @@ export function AnketaScreen() {
         <button
           type="submit"
           disabled={busy}
-          className="mt-4 self-start rounded-md bg-ink px-4 py-2 text-sm text-paper"
+          className="mt-4 self-start rounded-xl bg-brand px-4 py-2 text-sm text-paper hover:bg-ink"
         >
           Save
         </button>

@@ -73,7 +73,7 @@ export function AuthScreen() {
         <button
           type="submit"
           disabled={busy}
-          className="w-full cursor-pointer rounded-md bg-ink px-4 py-3 font-medium text-paper disabled:cursor-wait disabled:opacity-50"
+          className="w-full cursor-pointer rounded-xl bg-brand px-4 py-3 font-medium text-paper hover:bg-ink disabled:cursor-wait disabled:opacity-50"
         >
           Зарегистрироваться
         </button>
