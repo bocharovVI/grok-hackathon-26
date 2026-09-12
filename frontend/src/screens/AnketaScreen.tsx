@@ -33,7 +33,7 @@ export function AnketaScreen() {
       setUser(user);
       navigate("/");
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Could not save the anketa.");
+      setError(err instanceof Error ? err.message : "Could not save your profile.");
     } finally {
       setBusy(false);
     }
@@ -54,16 +54,16 @@ export function AnketaScreen() {
   return (
     <AppShell>
       <form className="mt-6 flex flex-col gap-5" onSubmit={(e) => void onSubmit(e)}>
-        <h1 className="text-4xl font-medium">Анкета</h1>
-        {field("heightCm", "рост")}
-        {field("weightKg", "вес")}
+        <h1 className="text-4xl font-medium">Health profile</h1>
+        {field("heightCm", "Height (cm)")}
+        {field("weightKg", "Weight (kg)")}
         <div className="flex gap-3">
           <input
             required
             inputMode="numeric"
             value={profile.age}
             onChange={(e) => setProfile((p) => ({ ...p, age: e.target.value }))}
-            placeholder="возраст"
+            placeholder="Age"
             className="w-1/2 border-b border-ink bg-transparent py-3 outline-none"
           />
           <select
@@ -72,16 +72,16 @@ export function AnketaScreen() {
             onChange={(e) => setProfile((p) => ({ ...p, sex: e.target.value as Sex }))}
             className="w-1/2 border-b border-ink bg-transparent py-3 outline-none"
           >
-            <option value="">пол</option>
-            <option value="female">жен</option>
-            <option value="male">муж</option>
-            <option value="other">другое</option>
+            <option value="">Sex</option>
+            <option value="female">Female</option>
+            <option value="male">Male</option>
+            <option value="other">Other</option>
           </select>
         </div>
         <textarea
           value={profile.comments}
           onChange={(e) => setProfile((p) => ({ ...p, comments: e.target.value }))}
-          placeholder="комментарии"
+          placeholder="Comments"
           rows={3}
           className="w-full resize-none border-b border-ink bg-transparent py-3 outline-none"
         />

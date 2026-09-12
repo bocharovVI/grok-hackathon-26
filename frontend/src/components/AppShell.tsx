@@ -29,7 +29,7 @@ export function AppShell({ children, showPlay, onPlay }: AppShellProps) {
   return (
     <div className="relative mx-auto min-h-dvh w-full max-w-[430px] bg-paper shadow-[0_0_0_1px_var(--color-line)]">
       <header className="flex items-center justify-between gap-2 border-b border-line px-4 py-3">
-        <Link to="/" aria-label="MediStory — главная" className="block min-w-0 max-w-[240px] flex-1 rounded-lg">
+        <Link to="/" aria-label="MediStory — Home" className="block min-w-0 max-w-[240px] flex-1 rounded-lg">
           <img src={medistoryLogo} alt="MediStory" width={2172} height={724} className="block h-auto w-full" />
         </Link>
         <div className="flex shrink-0 items-center gap-2">
@@ -63,13 +63,13 @@ export function AppShell({ children, showPlay, onPlay }: AppShellProps) {
       {open ? (
         <nav className="absolute right-4 z-20 w-40 rounded-xl border border-line bg-paper p-3 text-sm shadow-lg">
           <Link className="block py-1.5" to="/docs" onClick={() => setOpen(false)}>
-            my docs
+            My documents
           </Link>
           <Link className="block py-1.5" to="/anketa" onClick={() => setOpen(false)}>
-            profile
+            Profile
           </Link>
           <button type="button" className="block w-full py-1.5 text-left" onClick={() => void logout()}>
-            logout
+            Sign out
           </button>
         </nav>
       ) : null}
